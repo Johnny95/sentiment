@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentiment Analysis App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 10px;
+      text-align: center;
+    }
+    #result {
+      margin-top: 20px;
+    }
+    #inputText {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #pieChart {
+      max-width: 100%;
+      height: auto;
+      margin-top: 20px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Sentiment Analysis App</h1>
+  <label for="inputText">Enter Text, URL, or Twitter Username:</label>
+  <textarea id="inputText" rows="5" placeholder="Type or paste your text, URL, or Twitter username here..."></textarea>
+  <button onclick="analyzeSentiment()">Analyze Sentiment</button>
+  <div id="result"></div>
+  <canvas id="pieChart" width="400" height="400"></canvas>
+
+  <script>
+    // Load positive and negative word lists
+    const positiveWords = loadWordList('positive.txt');
+    const negativeWords = loadWordList('negative.txt');
+
+    function loadWordList(filename) {
+      const wordList = [];
+      // Assuming the file is a simple list of words, one per line
+      fetch(filename)
+        .then(response => response.text())
+        .then(data => {
+          wordList.push(...data.split('\n').filter(word => word.trim() !== ''));
+        })
+        .catch(error => console.error('Error loading word list:', error));
+
+      return wordList;
+    }
+
+      async function analyzeSentiment() {
+      const inputText = document.getElementById('inputText').value.toLowerCase();
+
+      let textToAnalyze = inputText;
+
+      // Check if the input is a URL and fetch text content
+      if (isURL(inputText)) {
+        const cors = 'https://proxy.cors.sh/';
+        const url = cors + inputText;
+        
+       fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+        }
+        return response.text();
+      })
+      .then(html => {
+        const textContent = extractTextFromParagraphs(html);
+        document.getElementById('result').innerText = textContent;
+      })
+      .catch(error => {
+        console.error('Error fetching URL:', error);
+      });
+
+   
+
+    function extractTextFromParagraphs(html) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const paragraphs = doc.querySelectorAll('p'); // Change 'p' to target other elements if needed
+      let extractedText = '';
+
+      paragraphs.forEach(paragraph => {
+        extractedText += paragraph.textContent.trim() + '\n';
+      });
+
+      return extractedText.trim();
+    }
+      }
+
+      // Perform sentiment analysis
+      const sentimentResult = calculateSentiment(textToAnalyze);
+
+      // Display results
+      displaySentimentResult(sentimentResult);
+
+      // Update or create the pie chart
+      updatePieChart(sentimentResult);
+    }
+
+    function calculateSentiment(text) {
+      // Count positive, negative, and neutral words
+      const positiveWordCount = countMatchingWords(text, positiveWords);
+      const negativeWordCount = countMatchingWords(text, negativeWords);
+
+      // Calculate sentiment scores
+      const totalWords = text.split(/\s+/).length;
+      const neutralWordCount = totalWords - positiveWordCount - negativeWordCount;
+
+      const positivityScore = (positiveWordCount / totalWords) * 100;
+      const negativityScore = (negativeWordCount / totalWords) * 100;
+      const neutralityScore = (neutralWordCount / totalWords) * 100;
+
+      return {
+        totalWords,
+        positiveWordCount,
+        negativeWordCount,
+        neutralWordCount,
+        positivityScore: positivityScore.toFixed(2),
+        negativityScore: negativityScore.toFixed(2),
+        neutralityScore: neutralityScore.toFixed(2),
+      };
+    }
+
+    function countMatchingWords(text, wordList) {
+      const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+      return words.filter(word => wordList.includes(word)).length;
+    }
+
+    function displaySentimentResult(result) {
+      const resultContainer = document.getElementById('result');
+      resultContainer.innerHTML = `
+        <h2>Sentiment Analysis Result</h2>
+        <p>Total Words Count: ${result.totalWords}</p>
+        <p>Positive Words Count: ${result.positiveWordCount} (${result.positivityScore}%)</p>
+        <p>Negative Words Count: ${result.negativeWordCount} (${result.negativityScore}%)</p>
+        <p>Neutral Words Count: ${result.neutralWordCount} (${result.neutralityScore}%)</p>
+        <!-- Add more information or charts as needed -->
+      `;
+    }
+
+    function updatePieChart(sentimentResult) {
+      const pieChartCanvas = document.getElementById('pieChart');
+      const ctx = pieChartCanvas.getContext('2d');
+
+      // Destroy the existing chart if it exists
+      if (window.myPieChart) {
+        window.myPieChart.destroy();
+      }
+
+      // Create a new pie chart
+      window.myPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Positivity', 'Negativity', 'Neutrality'],
+          datasets: [{
+            data: [sentimentResult.positivityScore, sentimentResult.negativityScore, sentimentResult.neutralityScore],
+            backgroundColor: ['green', 'red', 'gray'],
+          }],
+        },
+      });
+    }
+
+     function isURL(str) {
+      const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w&.\/?=%]*)?$/;
+      return urlPattern.test(str);
+    }
+  </script>
+</body>
+</html>
