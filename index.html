@@ -57,7 +57,7 @@
       let textToAnalyze = inputText;
 
       // Check if the input is a URL and fetch text content
-      if (isURL(inputText)) {
+     
         const cors = 'https://proxy.cors.sh/';
         const url = cors + inputText;
         
@@ -164,10 +164,6 @@
       });
     }
 
-     function isURL(str) {
-      const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w&.\/?=%]*)?$/;
-      return urlPattern.test(str);
-    }
   </script>
 </body>
 </html>
