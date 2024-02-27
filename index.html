@@ -3,65 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sentiment Analysis App</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 10px;
-      text-align: center;
-    }
-    #result {
-      margin-top: 20px;
-    }
-    #inputText {
-      width: 100%;
-      box-sizing: border-box;
-    }
-    #pieChart {
-      max-width: 100%;
-      height: auto;
-      margin-top: 20px;
-    }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Fetch and Extract Text Content</title>
 </head>
 <body>
-  <h1>Sentiment Analysis App</h1>
-  <label for="inputText">Enter Text, URL, or Twitter Username:</label>
-  <textarea id="inputText" rows="5" placeholder="Type or paste your text, URL, or Twitter username here..."></textarea>
-  <button onclick="analyzeSentiment()">Analyze Sentiment</button>
+  <h1>Text Content Extraction Example</h1>
   <div id="result"></div>
-  <canvas id="pieChart" width="400" height="400"></canvas>
 
   <script>
-    // Load positive and negative word lists
-    const positiveWords = loadWordList('positive.txt');
-    const negativeWords = loadWordList('negative.txt');
+    const url = 'https://proxy.cors.sh/https://www.vanishingincmagic.com/magician/Metal-Writing/';
 
-    function loadWordList(filename) {
-      const wordList = [];
-      // Assuming the file is a simple list of words, one per line
-      fetch(filename)
-        .then(response => response.text())
-        .then(data => {
-          wordList.push(...data.split('\n').filter(word => word.trim() !== ''));
-        })
-        .catch(error => console.error('Error loading word list:', error));
-
-      return wordList;
-    }
-
-      async function analyzeSentiment() {
-      const inputText = document.getElementById('inputText').value.toLowerCase();
-
-      let textToAnalyze = inputText;
-
-      // Check if the input is a URL and fetch text content
-     
-        const cors = 'https://proxy.cors.sh/';
-        const url = cors + inputText;
-        
-       fetch(url)
+    fetch(url)
       .then(response => {
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
@@ -76,8 +27,6 @@
         console.error('Error fetching URL:', error);
       });
 
-   
-
     function extractTextFromParagraphs(html) {
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const paragraphs = doc.querySelectorAll('p'); // Change 'p' to target other elements if needed
@@ -89,9 +38,6 @@
 
       return extractedText.trim();
     }
-      }
-
-  
   </script>
 </body>
 </html>
